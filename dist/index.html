@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="俄乌战线评估地图：查看发布方原始地图、历史档案和来源时间。由 ESP32 提供网页，浏览器加载地图。">
+  <meta name="color-scheme" content="dark"><title>战线档案 · 俄乌地图</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c1420'/%3E%3Cpath d='M7 6h9v20H7z' fill='%235e9fff'/%3E%3Cpath d='M18 6h7v20h-7z' fill='%23ee6b78'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/leaflet.css"><link rel="stylesheet" href="/style.css">
+  <script src="/leaflet.js" defer></script><script type="module" src="/app.mjs"></script>
+</head>
+<body>
+<a class="skip" href="#map-region">跳到地图</a>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span><div><h1>战线档案<span>俄乌地图</span></h1><p>FRONTLINE ATLAS</p></div></div>
+  <nav class="view-tabs" aria-label="地图视图"><button data-view="current" class="active" aria-pressed="true">最新评估</button><button data-view="history" aria-pressed="false">历史档案</button><button data-view="licensed" aria-pressed="false">独立地图</button></nav>
+  <div class="header-actions"><button id="sources-button" class="text-button">来源与方法</button><button id="refresh" class="refresh">↻ <span>检查更新</span></button></div>
+</header>
+<main class="workspace">
+<aside class="sidebar" aria-label="来源和数据状态">
+  <div class="sidebar-label">数据来源</div>
+  <div class="source-card"><div class="source-initial">ISW</div><div><h2>战争研究所</h2><p>Institute for the Study of War</p></div><span class="source-type">公开评估</span></div>
+  <p class="source-description">保留发布方的原始地图、图例及署名。评估、声称推进和实控范围分别解读。</p>
+  <dl class="status-list"><div><dt>地图评估截止</dt><dd id="cutoff">正在核查…</dd></div><div><dt>网页检查时间</dt><dd id="checked">尚未检查</dd></div><div><dt>更新方式</dt><dd>每 60 秒检查公开版本</dd></div><div><dt>数据粒度</dt><dd id="resolution">按发布方评估 / 通常每日</dd></div></dl>
+  <div class="availability" id="availability"><span class="status-line" id="source-status">正在连接来源</span><p id="source-detail">刷新时间不代表战线发生变化。</p></div>
+  <div class="sidebar-label legend-title">阅读地图</div>
+  <div class="legend"><p><span class="swatch russian"></span><span>俄方评估控制区域</span></p><p><span class="swatch ukrainian"></span><span id="ua-label">乌方活动 / 反攻相关区域</span></p><p><span class="swatch disputed"></span><span>声称或争议范围</span></p></div>
+  <p class="caption" id="legend-note">原图采用发布方图例；蓝色活动范围不等于已确认实控。未着色区域也不能直接推断为另一方控制。</p>
+  <div class="sidebar-bottom"><span class="device-tag">ESP32 · 浏览器地图</span><p>设备提供网页。底图、评估和档案需要浏览器连接互联网。</p><a href="https://deepstatemap.live/en" target="_blank" rel="noopener noreferrer">打开 DeepState 交叉核对 ↗</a></div>
+</aside>
+<section class="map-workspace">
+  <div class="map-toolbar"><div><span class="eyebrow" id="view-label">最新公开评估</span><h2 id="map-title">乌克兰及周边战区</h2></div><div class="map-actions"><a id="original" class="button secondary" href="https://storymaps.arcgis.com/stories/36a7f6a6f5a9448496de641cf64bd375" target="_blank" rel="noopener noreferrer">打开原图 ↗</a><button id="fullscreen" class="icon-button" title="地图全屏" aria-label="地图全屏">⛶</button></div></div>
+  <div class="truth-note"><span>评估地图</span><p>公开信息存在延迟及不确定性；不代表实时战场真值。</p></div>
+  <div id="map-region" class="map-region" tabindex="-1" aria-label="交互地图">
+    <iframe id="official-map" title="ISW 发布方原始俄乌战线地图" src="https://www.arcgis.com/apps/Embed/index.html?webmap=9f04944a2fe84edab9da31750c2b15eb&amp;extent=22,44,41,53&amp;zoom=true&amp;scale=true&amp;legend=true&amp;theme=light" allow="fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <div id="independent-map" hidden></div>
+    <div id="map-notice" class="map-notice" hidden><strong id="notice-title"></strong><p id="notice-body"></p></div>
+  </div>
+  <div class="map-credit"><a href="https://understandingwar.org" target="_blank" rel="noopener noreferrer">Source: Institute for the Study of War</a><span id="viewer-status">原图由发布方加载；嵌入空白时可打开原图。</span></div>
+  <section class="timeline" aria-label="历史地图选择">
+    <div class="timeline-heading"><div><span class="eyebrow">时间浏览</span><h2 id="timeline-title">选择已发布的历史档案</h2></div><div id="granularities" class="granularities" role="group" aria-label="时间步长"><button data-step="hour" title="需要来源提供小时级快照">小时</button><button data-step="day">天</button><button data-step="week">星期</button><button data-step="month" class="active">月</button><button data-step="year">年</button></div></div>
+    <div id="archive-controls"><div class="archive-bar"><label for="year">年份</label><select id="year" aria-label="档案年份"></select><button id="archive-index" class="text-button">完整官方档案 ↗</button><span id="archive-count"></span></div><div id="month-grid" class="month-grid" aria-label="月份档案"></div></div>
+    <div id="snapshot-controls" hidden><div class="snapshot-bar"><button id="previous" aria-label="前一个时间">‹</button><button id="play" aria-label="播放历史">播放</button><button id="next" aria-label="后一个时间">›</button><label for="target-time">目标时间（UTC）</label><input id="target-time" type="datetime-local" step="3600"><button id="apply-time">查看</button><button id="latest">最新</button></div><input type="range" id="snapshot-range" min="0" max="0" value="0" aria-label="选择实际发布的快照"><p id="snapshot-label"></p></div>
+    <p class="timeline-note" id="timeline-note">月 / 年用于浏览档案。日 / 周回放请使用原图内的时间条；没有小时级数据时不生成小时级战线。</p>
+  </section>
+</section>
+</main>
+<dialog id="source-dialog"><form method="dialog"><button class="dialog-close" aria-label="关闭">×</button></form><span class="eyebrow">透明度与方法</span><h2>地图能说明什么</h2><p>ISW 是公开情报研究机构。其地图是基于公开证据的评估，不能保证覆盖所有变动，也不是双方共同确认的官方战线。</p><p>原图中的推进、活动、渗透和声称范围，不等同于稳定实控。独立地图仅按授权数据明确标记的俄方、乌方、争议或未知区域上色，不用国界减去一方范围推算另一方。</p><p>网页每 60 秒检查来源元数据。地图评估截止、项目修改时间与网页检查时间是三个不同时间；原始图层可能在当日最终评估发布前编辑。</p><p>历史视图只打开已经发布的档案。缺失月份保持空白；不会插值、预测或把当下战线套用到过去。日、周、月、年只是时间浏览步长。</p><p>ISW 地理数据需要书面许可才能复制或再加工。本页展示原始发布内容；独立绘图接口需自行接入获授权的数据。外部数据和嵌入页面可能受网络、服务可用性或浏览器限制。</p><div class="dialog-links"><a href="https://understandingwar.org/analysis/russia-ukraine/mapping-methodology-ukraine-product-line/" target="_blank" rel="noopener noreferrer">ISW 地图方法 ↗</a><a href="https://understandingwar.org/fair-use-and-attribution-policy/" target="_blank" rel="noopener noreferrer">使用及署名政策 ↗</a><a href="https://storymaps.arcgis.com/stories/733fe90805894bfc8562d90b106aa895" target="_blank" rel="noopener noreferrer">完整历史档案 ↗</a></div></dialog>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<noscript>地图需要 JavaScript。请直接打开 <a href="https://storymaps.arcgis.com/stories/36a7f6a6f5a9448496de641cf64bd375">ISW 原图</a>。</noscript>
+</body></html>

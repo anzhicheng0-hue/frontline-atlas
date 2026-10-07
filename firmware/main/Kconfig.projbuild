@@ -1,0 +1,14 @@
+menu "Frontline web server"
+    config FRONTLINE_WIFI_SSID
+        string "Router Wi-Fi SSID (empty means AP only)"
+        default ""
+    config FRONTLINE_WIFI_PASSWORD
+        string "Router Wi-Fi password"
+        default ""
+    config FRONTLINE_AP_SSID
+        string "ESP32 fallback hotspot name"
+        default "Frontline-ESP32"
+    config FRONTLINE_AP_PASSWORD
+        string "ESP32 hotspot password (8-63 characters)"
+        default "frontline2026"
+endmenu
